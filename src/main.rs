@@ -9,7 +9,7 @@ const PARSE_ERROR: &str = "parse string error";
 #[derive(Debug)] 
 struct IPV4Node {
     prefix: u32,
-    lenght: u8
+    length: u8
 }
 
 struct IPV4Trie {
@@ -24,7 +24,7 @@ impl fmt::Display for IPV4Node {
             self.prefix >> 16 & 0xff,
             self.prefix >> 8 & 0xff,
             self.prefix & 0xff,
-            self.lenght
+            self.length
         )
     }
 }
@@ -35,13 +35,13 @@ impl FromStr for IPV4Node {
     type Err = String;  
 
      fn from_str(string: &str) -> Result<Self, Self::Err>  {
-        let (string_ip, lenght) = string.split_once("/").expect(PARSE_ERROR);
+        let (string_ip, length) = string.split_once("/").expect(PARSE_ERROR);
         let prefix = string_ip.split(".")
             .filter_map(|x| x.parse::<u8>().ok())
             .enumerate()
             .map(|(i, val)| (val as u32) << ((3 - i) * 8))
             .sum();
-        Ok(Self{prefix, lenght:lenght.parse::<u8>().expect(PARSE_ERROR)})
+        Ok(Self{prefix, length:length.parse::<u8>().expect(PARSE_ERROR)})
      }
 } 
 
