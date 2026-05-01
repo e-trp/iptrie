@@ -1,9 +1,16 @@
 use std::fmt;
-use std::io::SeekFrom;
 use std::str::FromStr;
 
 
 const PARSE_ERROR: &str = "parse string error";
+
+
+pub trait CidrTrait  {
+    type AddrType;
+
+    fn network(&self) -> Self::AddrType;
+    fn prefix_len(&self) -> u8;
+}
 
 
 #[derive(Debug)] 
@@ -37,14 +44,26 @@ impl FromStr for Cidr<u32> {
 } 
 
 
-pub struct IpTrie<T> {
-    pub root: Option<Cidr<T>>
+impl CidrTrait for Cidr<u32>{
+
+    type AddrType = u32;
+
+    fn network(&self) -> Self::AddrType {
+        self.net
+    }
+
+    fn prefix_len(&self) -> u8 {
+        self.length
+    }
+
 }
 
-impl  IpTrie<u32> {
+pub struct CidrTrie<T: CidrTrait> {
+    pub root: Option<T>,
+}
 
-        pub fn new(root: Option<Cidr<u32>>) -> Self {
-            Self{root}
-        }
-    
+impl<T: CidrTrait> CidrTrie<T> {
+    pub fn new(root: Option<T>) -> Self {
+        Self { root }
+    }
 }
