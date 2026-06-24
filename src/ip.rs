@@ -89,10 +89,14 @@ impl CidrTrait for Cidr<u32>{
 
 impl Iterator for CidrIter<u32> {
     
-    type Item = String;
+    type Item = u32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        todo!("pass")
+        self.start += 1;
+        if self.start >= self.end {
+            return None;
+        }
+        Some(self.start)
     }
 
 }
