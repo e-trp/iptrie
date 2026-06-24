@@ -21,12 +21,14 @@ pub trait CidrTrait  {
 
     type AddrType;
 
+    fn mask(&self) -> Self::AddrType;
+
     fn network(&self) -> Self::AddrType;
+
+    fn broadcast(&self) -> Self::AddrType;
 
     fn prefix_len(&self) -> u8;
     
-    fn broadcast_address(&self) -> &str;
-
     fn iter(&self) -> CidrIter<Self::AddrType>;
 
 
@@ -63,20 +65,25 @@ impl CidrTrait for Cidr<u32>{
 
     type AddrType = u32;
 
+    #[inline(always)]
+    fn mask(&self) -> Self::AddrType {
+        !0u32 << (32 - self.length)
+    }
+
     fn network(&self) -> Self::AddrType {
-        self.address
+        self.address & self.mask()
+    }
+
+    fn broadcast(&self) -> Self::AddrType {
+        self.network() | (!self.mask())
     }
 
     fn prefix_len(&self) -> u8 {
         self.length
     }
 
-    fn broadcast_address(&self) -> &str {
-        todo!("return some broadcast string addr")
-    }
-
     fn iter(&self) -> CidrIter<u32> {
-        todo!("return some cidr iter")
+        CidrIter { start: self.network(), end: self.broadcast() }
     }
 }
 
