@@ -36,12 +36,10 @@ impl fmt::Display for Cidr<u32> {
     }
 }
 
-
 /// Parse str to get cidr object
 /// ```
 /// use iptrie::ip::Cidr;
-/// use std::str::FromStr;
-/// 
+///
 /// let network = Cidr{address: 1701209970u32, length: 27};
 /// let net_from_str: Cidr<u32> = "101.102.103.114/27".parse().unwrap();
 /// assert_eq!(network, net_from_str);
