@@ -1,25 +1,21 @@
-#![allow(unused)] 
+#![allow(unused)]
 use std::fmt;
 use std::str::FromStr;
 
-
 const PARSE_ERROR: &str = "parse string error";
 
-
-#[derive(Debug)] 
+#[derive(Debug)]
 pub struct Cidr<T> {
-   pub address: T,
-   pub length: u8
+    pub address: T,
+    pub length: u8,
 }
 
-
-pub struct  CidrIter<T> {
+pub struct CidrIter<T> {
     start: T,
-    end: T, 
+    end: T,
 }
 
-pub trait CidrTrait  {
-
+pub trait CidrTrait {
     type AddrType;
 
     fn mask(&self) -> Self::AddrType;
@@ -29,49 +25,45 @@ pub trait CidrTrait  {
     fn broadcast(&self) -> Self::AddrType;
 
     fn prefix_len(&self) -> u8;
-    
+
     fn iter(&self) -> CidrIter<Self::AddrType>;
-
-
 }
 
-
-
 impl fmt::Display for Cidr<u32> {
-
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let [o1, o2, o3, o4] = self.address.to_be_bytes();
         write!(f, "{}.{}.{}.{}/{}", o1, o2, o3, o4, self.length)
     }
 }
 
-
 impl FromStr for Cidr<u32> {
+    type Err = String;
 
-    type Err = String;  
-
-    fn from_str(string: &str) -> Result<Self, Self::Err>  {
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
         let (address_str, length) = string.split_once("/").expect(PARSE_ERROR);
-        let address = address_str.split(".")
+        let address = address_str
+            .split(".")
             .filter_map(|x| x.parse::<u8>().ok())
             .enumerate()
             .map(|(i, val)| (val as u32) << ((3 - i) * 8))
             .sum();
-        Ok(Self{address, length:length.parse::<u8>().expect(PARSE_ERROR)})
-     }
-}
-
-
-impl From<u32> for Cidr<u32> {
-
-    fn from(value: u32) -> Self {
-        Self { address: value, length: 32u8 }
+        Ok(Self {
+            address,
+            length: length.parse::<u8>().expect(PARSE_ERROR),
+        })
     }
 }
 
+impl From<u32> for Cidr<u32> {
+    fn from(value: u32) -> Self {
+        Self {
+            address: value,
+            length: 32u8,
+        }
+    }
+}
 
-impl CidrTrait for Cidr<u32>{
-
+impl CidrTrait for Cidr<u32> {
     type AddrType = u32;
 
     #[inline(always)]
@@ -92,13 +84,14 @@ impl CidrTrait for Cidr<u32>{
     }
 
     fn iter(&self) -> CidrIter<u32> {
-        CidrIter { start: self.network(), end: self.broadcast() }
+        CidrIter {
+            start: self.network(),
+            end: self.broadcast(),
+        }
     }
 }
 
-
 impl Iterator for CidrIter<u32> {
-    
     type Item = u32;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -108,26 +101,21 @@ impl Iterator for CidrIter<u32> {
         }
         Some(self.start)
     }
-
 }
 
-
-pub struct CidrNode< T: CidrTrait> {
+pub struct CidrNode<T: CidrTrait> {
     value: T,
     skip: u8,
     prefix: u8,
     left: Option<Box<CidrNode<T>>>,
-    right: Option<Box<CidrNode<T>>>
+    right: Option<Box<CidrNode<T>>>,
 }
-
 
 pub struct CidrTrie<T: CidrTrait> {
     pub root: CidrNode<T>,
 }
 
-
 impl<T: CidrTrait> CidrTrie<T> {
-
     pub fn new(&self) -> Self {
         todo!("todo")
     }

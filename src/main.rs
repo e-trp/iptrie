@@ -1,12 +1,14 @@
-#![allow(unused)] 
+#![allow(unused)]
 use iptrie::ip::{Cidr, CidrTrait, CidrTrie};
 
 fn main() {
-   let root: Cidr<u32> = "101.102.103.114/27".parse().unwrap();
+    let root: Cidr<u32> = "101.102.103.114/27".parse().unwrap();
 
-   let address = root.iter().map(Cidr::<u32>::from).collect::<Vec<Cidr<u32>>>();
-   for addr in address {
-      println!("{}", addr);
-   }
-
+    let address = root
+        .iter()
+        .map(Cidr::<u32>::from)
+        .collect::<Vec<Cidr<u32>>>();
+    for addr in address {
+        println!("{}", addr);
+    }
 }
