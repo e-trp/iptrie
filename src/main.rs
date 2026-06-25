@@ -1,3 +1,4 @@
+#![allow(unused)] 
 use iptrie::ip::{Cidr, CidrTrait, CidrTrie};
 
 fn main() {
@@ -8,6 +9,4 @@ fn main() {
       println!("{}", addr);
    }
 
-   println!("integer value {}, string value {}", root.address, root);
-   let _trie = CidrTrie::<Cidr<u32>>::new(Some(root));
 }

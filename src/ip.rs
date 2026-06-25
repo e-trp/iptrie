@@ -1,3 +1,4 @@
+#![allow(unused)] 
 use std::fmt;
 use std::str::FromStr;
 
@@ -110,12 +111,28 @@ impl Iterator for CidrIter<u32> {
 
 }
 
-pub struct CidrTrie<T: CidrTrait> {
-    pub root: Option<T>,
+
+pub struct CidrNode< T: CidrTrait> {
+    value: T,
+    skip: u8,
+    prefix: u8,
+    left: Option<Box<CidrNode<T>>>,
+    right: Option<Box<CidrNode<T>>>
 }
 
+
+pub struct CidrTrie<T: CidrTrait> {
+    pub root: CidrNode<T>,
+}
+
+
 impl<T: CidrTrait> CidrTrie<T> {
-    pub fn new(root: Option<T>) -> Self {
-        Self { root }
+
+    pub fn new(&self) -> Self {
+        todo!("todo")
+    }
+
+    pub fn insert(&mut self, node: T) {
+        todo!("todo")
     }
 }
