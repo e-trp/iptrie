@@ -13,8 +13,8 @@ pub struct Cidr<T> {
 
 
 pub struct  CidrIter<T> {
-    pub start: T,
-    pub end: T, 
+    start: T,
+    end: T, 
 }
 
 pub trait CidrTrait  {
@@ -58,7 +58,15 @@ impl FromStr for Cidr<u32> {
             .sum();
         Ok(Self{address, length:length.parse::<u8>().expect(PARSE_ERROR)})
      }
-} 
+}
+
+
+impl From<u32> for Cidr<u32> {
+
+    fn from(value: u32) -> Self {
+        Self { address: value, length: 32u8 }
+    }
+}
 
 
 impl CidrTrait for Cidr<u32>{
@@ -87,6 +95,7 @@ impl CidrTrait for Cidr<u32>{
     }
 }
 
+
 impl Iterator for CidrIter<u32> {
     
     type Item = u32;
@@ -100,7 +109,6 @@ impl Iterator for CidrIter<u32> {
     }
 
 }
-
 
 pub struct CidrTrie<T: CidrTrait> {
     pub root: Option<T>,
