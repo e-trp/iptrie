@@ -112,7 +112,7 @@ impl Iterator for CidrIter<u32> {
 }
 
 pub struct CidrNode<T: CidrTrait> {
-    value: T,
+    value: Option<T>,
     skip: u8,
     prefix: u8,
     left: Option<Box<CidrNode<T>>>,
@@ -120,12 +120,20 @@ pub struct CidrNode<T: CidrTrait> {
 }
 
 pub struct CidrTrie<T: CidrTrait> {
-    pub root: CidrNode<T>,
+    pub root: Option<CidrNode<T>>,
 }
 
 impl<T: CidrTrait> CidrTrie<T> {
     pub fn new(&self) -> Self {
-        todo!("todo")
+        Self {
+            root: Some(CidrNode {
+                value: None,
+                skip: 0,
+                prefix: 0,
+                left: None,
+                right: None,
+            }),
+        }
     }
 
     pub fn insert(&mut self, node: T) {
