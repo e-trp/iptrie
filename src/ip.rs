@@ -27,6 +27,8 @@ pub trait CidrTrait {
     fn prefix_len(&self) -> u8;
 
     fn iter(&self) -> CidrIter<Self::AddrType>;
+
+    fn bits(&self) -> impl Iterator<Item = u8> + '_;
 }
 
 impl fmt::Display for Cidr<u32> {
@@ -97,6 +99,12 @@ impl CidrTrait for Cidr<u32> {
             end: self.broadcast(),
         }
     }
+
+    fn bits(&self) -> impl Iterator<Item = u8> + '_ {
+        let addr = self.network();
+        let len = self.prefix_len();
+        (0..len).map(move |i| ((addr >> (31 - i)) & 1) as u8)
+    }
 }
 
 impl Iterator for CidrIter<u32> {
@@ -111,32 +119,94 @@ impl Iterator for CidrIter<u32> {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct CidrNode<T: CidrTrait> {
     value: Option<T>,
-    skip: u8,
-    prefix: u8,
     left: Option<Box<CidrNode<T>>>,
     right: Option<Box<CidrNode<T>>>,
+}
+
+impl<T: CidrTrait> Default for CidrNode<T> {
+    fn default() -> Self {
+        Self {
+            value: None,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+impl<T: CidrTrait> From<T> for CidrNode<T> {
+    fn from(value: T) -> Self {
+        Self {
+            value: Some(value),
+            left: None,
+            right: None,
+        }
+    }
 }
 
 pub struct CidrTrie<T: CidrTrait> {
     pub root: Option<CidrNode<T>>,
 }
 
+impl<T: CidrTrait> Default for CidrTrie<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T: CidrTrait> CidrTrie<T> {
-    pub fn new(&self) -> Self {
+    pub fn new() -> Self {
         Self {
-            root: Some(CidrNode {
-                value: None,
-                skip: 0,
-                prefix: 0,
-                left: None,
-                right: None,
-            }),
+            root: Some(CidrNode::<T>::default()),
         }
     }
 
-    pub fn insert(&mut self, node: T) {
-        todo!("todo")
+    /// # Example (exact match trie)
+    /// ```
+    /// use iptrie::ip::{Cidr, CidrTrie};
+    ///
+    /// let mut trie = CidrTrie::<Cidr<u32>>::new();
+    ///
+    /// trie.insert("10.0.0.0/8".parse().unwrap());
+    /// trie.insert("192.168.0.0/16".parse().unwrap());
+    ///
+    /// let mut result = trie.search("10.0.0.1/32".parse().unwrap());
+    /// assert!(result.is_none());
+    ///
+    /// result = trie.search("192.168.0.0/16".parse().unwrap());
+    /// assert!(result.is_some());
+    /// ```
+    pub fn insert(&mut self, cidr: T) {
+        let mut current_node = self.root.as_mut().unwrap();
+
+        for bit in cidr.bits() {
+            if bit == 1 {
+                if current_node.right.is_none() {
+                    current_node.right = Some(Box::new(CidrNode::<T>::default()));
+                }
+                current_node = current_node.right.as_mut().unwrap();
+            } else {
+                if current_node.left.is_none() {
+                    current_node.left = Some(Box::new(CidrNode::<T>::default()));
+                }
+                current_node = current_node.left.as_mut().unwrap();
+            }
+        }
+
+        current_node.value = Some(cidr);
+    }
+
+    pub fn search(&self, cidr: T) -> Option<&T> {
+        let mut current_node = self.root.as_ref().unwrap();
+        for bit in cidr.bits() {
+            current_node = if bit == 1 {
+                current_node.right.as_ref()?
+            } else {
+                current_node.left.as_ref()?
+            };
+        }
+        current_node.value.as_ref()
     }
 }
