@@ -3,4 +3,9 @@ name = "iptrie"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "iptrie"
+crate-type = ["rlib", "cdylib"]
+
 [dependencies]
+pyo3 = { version = "0.29", features = ["extension-module"] }
