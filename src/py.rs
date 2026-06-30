@@ -18,7 +18,7 @@ impl PyTrie {
     fn insert(&mut self, cidr: &str) -> PyResult<()> {
         let parsed: Cidr<u32> = cidr
             .parse()
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e))?;
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
 
         self.inner.insert(parsed);
         Ok(())
