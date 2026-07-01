@@ -1,8 +1,6 @@
 #![allow(unused)]
 
-
 const PARSE_ERROR: &str = "parse string error";
-
 
 pub trait IpUsignedInt:
     Copy
@@ -18,7 +16,6 @@ pub trait IpUsignedInt:
     const ZERO: Self;
     const MAX: Self;
 }
-
 
 impl IpUsignedInt for u32 {
     const BITS: u8 = 32;
@@ -44,7 +41,6 @@ pub struct CidrIter<T: IpUsignedInt> {
 }
 
 pub trait CidrTrait {
-
     type AddrType: IpUsignedInt;
 
     fn prefix_len(&self) -> u8;
@@ -53,7 +49,7 @@ pub trait CidrTrait {
 
     #[inline(always)]
     fn mask(&self) -> Self::AddrType {
-        Self::AddrType::MAX <<(Self::AddrType::BITS - self.prefix_len())
+        Self::AddrType::MAX << (Self::AddrType::BITS - self.prefix_len())
     }
 
     fn network(&self) -> Self::AddrType {
@@ -72,7 +68,6 @@ pub trait CidrTrait {
     }
 
     fn bits(&self) -> impl Iterator<Item = u8> + '_;
-
 }
 
 impl std::fmt::Display for Cidr<u32> {
