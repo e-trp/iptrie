@@ -40,6 +40,13 @@ pub struct CidrIter<T: IpUsignedInt> {
     end: T,
 }
 
+impl<T: IpUsignedInt> Cidr<T> {
+    pub fn new(address: T, length: u8) -> Self {
+        assert!(length <= T::BITS);
+        Self { address, length }
+    }
+}
+
 pub trait CidrTrait {
     type AddrType: IpUsignedInt;
 
@@ -72,8 +79,8 @@ pub trait CidrTrait {
 
 impl std::fmt::Display for Cidr<u32> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let [o1, o2, o3, o4] = self.address.to_be_bytes();
-        write!(f, "{o1}.{o2}.{o3}.{o4}/{0}", self.length)
+        let [o1, o2, o3, o4] = self.address().to_be_bytes();
+        write!(f, "{o1}.{o2}.{o3}.{o4}/{0}", self.prefix_len())
     }
 }
 
@@ -81,7 +88,7 @@ impl std::fmt::Display for Cidr<u32> {
 /// ```
 /// use iptrie::ip::Cidr;
 ///
-/// let network = Cidr{address: 1701209970u32, length: 27};
+/// let network = Cidr::new(1701209970u32, 27);
 /// let net_from_str: Cidr<u32> = "101.102.103.114/27".parse().unwrap();
 /// assert_eq!(network, net_from_str);
 /// ```
