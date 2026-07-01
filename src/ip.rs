@@ -1,38 +1,82 @@
 #![allow(unused)]
-use std::fmt;
-use std::str::FromStr;
+
 
 const PARSE_ERROR: &str = "parse string error";
 
-#[derive(Debug, PartialEq)]
-pub struct Cidr<T> {
-    pub address: T,
-    pub length: u8,
+
+pub trait IpUsignedInt:
+    Copy
+    + Eq
+    + Ord
+    + std::fmt::Display
+    + std::ops::BitAnd<Output = Self>
+    + std::ops::BitOr<Output = Self>
+    + std::ops::Not<Output = Self>
+    + std::ops::Shl<u8, Output = Self>
+{
+    const BITS: u8;
+    const ZERO: Self;
+    const MAX: Self;
 }
 
-pub struct CidrIter<T> {
+
+impl IpUsignedInt for u32 {
+    const BITS: u8 = 32;
+    const ZERO: Self = 0;
+    const MAX: Self = u32::MAX;
+}
+
+impl IpUsignedInt for u128 {
+    const BITS: u8 = 128;
+    const ZERO: Self = 0;
+    const MAX: Self = u128::MAX;
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Cidr<T: IpUsignedInt> {
+    address: T,
+    length: u8,
+}
+
+pub struct CidrIter<T: IpUsignedInt> {
     start: T,
     end: T,
 }
 
 pub trait CidrTrait {
-    type AddrType;
 
-    fn mask(&self) -> Self::AddrType;
-
-    fn network(&self) -> Self::AddrType;
-
-    fn broadcast(&self) -> Self::AddrType;
+    type AddrType: IpUsignedInt;
 
     fn prefix_len(&self) -> u8;
 
-    fn iter(&self) -> CidrIter<Self::AddrType>;
+    fn address(&self) -> Self::AddrType;
+
+    #[inline(always)]
+    fn mask(&self) -> Self::AddrType {
+        Self::AddrType::MAX <<(Self::AddrType::BITS - self.prefix_len())
+    }
+
+    fn network(&self) -> Self::AddrType {
+        self.address() & self.mask()
+    }
+
+    fn broadcast(&self) -> Self::AddrType {
+        self.network() | (!self.mask())
+    }
+
+    fn iter(&self) -> CidrIter<Self::AddrType> {
+        CidrIter {
+            start: self.network(),
+            end: self.broadcast(),
+        }
+    }
 
     fn bits(&self) -> impl Iterator<Item = u8> + '_;
+
 }
 
-impl fmt::Display for Cidr<u32> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl std::fmt::Display for Cidr<u32> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let [o1, o2, o3, o4] = self.address.to_be_bytes();
         write!(f, "{o1}.{o2}.{o3}.{o4}/{0}", self.length)
     }
@@ -46,7 +90,7 @@ impl fmt::Display for Cidr<u32> {
 /// let net_from_str: Cidr<u32> = "101.102.103.114/27".parse().unwrap();
 /// assert_eq!(network, net_from_str);
 /// ```
-impl FromStr for Cidr<u32> {
+impl std::str::FromStr for Cidr<u32> {
     type Err = String;
 
     fn from_str(string: &str) -> Result<Self, Self::Err> {
@@ -77,27 +121,13 @@ impl CidrTrait for Cidr<u32> {
     type AddrType = u32;
 
     #[inline(always)]
-    fn mask(&self) -> Self::AddrType {
-        !0u32 << (32 - self.length)
-    }
-
-    fn network(&self) -> Self::AddrType {
-        self.address & self.mask()
-    }
-
-    fn broadcast(&self) -> Self::AddrType {
-        self.network() | (!self.mask())
-    }
-
     fn prefix_len(&self) -> u8 {
         self.length
     }
 
-    fn iter(&self) -> CidrIter<u32> {
-        CidrIter {
-            start: self.network(),
-            end: self.broadcast(),
-        }
+    #[inline(always)]
+    fn address(&self) -> Self::AddrType {
+        self.address
     }
 
     fn bits(&self) -> impl Iterator<Item = u8> + '_ {

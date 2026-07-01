@@ -21,4 +21,5 @@ fn main() {
 
     result = trie.search("192.168.0.0/16".parse().unwrap());
     assert!(result.is_some());
+    dbg!(result);
 }
