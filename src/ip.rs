@@ -241,4 +241,37 @@ impl<T: CidrTrait> CidrTrie<T> {
         }
         current_node.value.as_ref()
     }
+
+    pub fn search_supernets(&self, cidr: T) -> Vec<&T> {
+        let mut current_node = self.root.as_ref().unwrap();
+        let len = cidr.prefix_len();
+        let network = cidr.network();
+        let mut result = Vec::<&T>::with_capacity(5);
+        for (index, bit) in cidr.bits().enumerate() {
+            if bit == 1 {
+                if let Some(node) = current_node.right.as_ref() {
+                    if let Some(cidr) = node.value.as_ref()
+                        && cidr.prefix_len() < len
+                    {
+                        result.push(cidr);
+                    }
+                    current_node = node;
+                } else {
+                    break;
+                }
+            } else {
+                if let Some(node) = current_node.left.as_ref() {
+                    if let Some(cidr) = node.value.as_ref()
+                        && cidr.prefix_len() < len
+                    {
+                        result.push(cidr);
+                    }
+                    current_node = node;
+                } else {
+                    break;
+                }
+            }
+        }
+        result
+    }
 }

@@ -14,6 +14,7 @@ fn main() {
 
     let mut trie = CidrTrie::<Cidr<u32>>::new();
     trie.insert("10.0.0.0/8".parse().unwrap());
+    trie.insert("10.10.0.0/16".parse().unwrap());
     trie.insert("192.168.0.0/16".parse().unwrap());
 
     let mut result = trie.search("10.0.0.1/32".parse().unwrap());
@@ -21,4 +22,9 @@ fn main() {
 
     result = trie.search("192.168.0.0/16".parse().unwrap());
     assert!(result.is_some());
+
+    println!(
+        "{:?}",
+        trie.search_supernets("10.10.10.0/24".parse().unwrap())
+    );
 }
