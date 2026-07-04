@@ -18,7 +18,7 @@ fn main() {
     trie.insert("192.168.0.0/16".parse().unwrap());
 
     let mut lookup_value = "10.0.0.1/32".parse::<Cidr<u32>>().unwrap();
-    let mut result = trie.search( &lookup_value);
+    let mut result = trie.search(&lookup_value);
     assert!(result.is_none());
 
     lookup_value = "192.168.0.0/16".parse().unwrap();
@@ -26,6 +26,5 @@ fn main() {
     assert!(result.is_some());
 
     lookup_value = "10.10.10.0/24".parse().unwrap();
-    println!("{:?}",trie.search_supernets(&lookup_value));
-    
+    println!("{:?}", trie.search_supernets(&lookup_value));
 }
