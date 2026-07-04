@@ -17,14 +17,15 @@ fn main() {
     trie.insert("10.10.0.0/16".parse().unwrap());
     trie.insert("192.168.0.0/16".parse().unwrap());
 
-    let mut result = trie.search("10.0.0.1/32".parse().unwrap());
+    let mut lookup_value = "10.0.0.1/32".parse::<Cidr<u32>>().unwrap();
+    let mut result = trie.search( &lookup_value);
     assert!(result.is_none());
 
-    result = trie.search("192.168.0.0/16".parse().unwrap());
+    lookup_value = "192.168.0.0/16".parse().unwrap();
+    result = trie.search(&lookup_value);
     assert!(result.is_some());
 
-    println!(
-        "{:?}",
-        trie.search_supernets("10.10.10.0/24".parse().unwrap())
-    );
+    lookup_value = "10.10.10.0/24".parse().unwrap();
+    println!("{:?}",trie.search_supernets(&lookup_value));
+    
 }

@@ -230,7 +230,7 @@ impl<T: CidrTrait> CidrTrie<T> {
         current_node.value = Some(cidr);
     }
 
-    pub fn search(&self, cidr: T) -> Option<&T> {
+    pub fn search(&self, cidr: &T) -> Option<&T> {
         let mut current_node = self.root.as_ref().unwrap();
         for bit in cidr.bits() {
             current_node = if bit == 1 {
@@ -242,7 +242,7 @@ impl<T: CidrTrait> CidrTrie<T> {
         current_node.value.as_ref()
     }
 
-    pub fn search_supernets(&self, cidr: T) -> Vec<&T> {
+    pub fn search_supernets(&self, cidr: &T) -> Vec<&T> {
         let mut current_node = self.root.as_ref().unwrap();
         let len = cidr.prefix_len();
         let network = cidr.network();
@@ -273,5 +273,9 @@ impl<T: CidrTrait> CidrTrie<T> {
             }
         }
         result
+    }
+
+    pub fn search_subnets(&self, cidr: &T) -> Vec<&T> {
+        todo!("empty");
     }
 }

@@ -26,6 +26,6 @@ impl PyTrie {
 
     fn search(&self, cidr: &str) -> Option<String> {
         let parsed: Cidr<u32> = cidr.parse().ok()?;
-        self.inner.search(parsed).map(|v| v.to_string())
+        self.inner.search(&parsed).map(|v| v.to_string())
     }
 }
