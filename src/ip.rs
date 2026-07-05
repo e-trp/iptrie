@@ -250,9 +250,7 @@ impl<T: CidrTrait> CidrTrie<T> {
         for (index, bit) in cidr.bits().enumerate() {
             if bit == 1 {
                 if let Some(node) = current_node.right.as_ref() {
-                    if let Some(cidr) = node.value.as_ref()
-                        && cidr.prefix_len() < len
-                    {
+                    if let Some(cidr) = node.value.as_ref(){
                         result.push(cidr);
                     }
                     current_node = node;
@@ -261,9 +259,7 @@ impl<T: CidrTrait> CidrTrie<T> {
                 }
             } else {
                 if let Some(node) = current_node.left.as_ref() {
-                    if let Some(cidr) = node.value.as_ref()
-                        && cidr.prefix_len() < len
-                    {
+                    if let Some(cidr) = node.value.as_ref(){
                         result.push(cidr);
                     }
                     current_node = node;

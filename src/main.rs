@@ -16,6 +16,7 @@ fn main() {
     trie.insert("10.0.0.0/8".parse().unwrap());
     trie.insert("10.10.0.0/16".parse().unwrap());
     trie.insert("192.168.0.0/16".parse().unwrap());
+    trie.insert("10.10.10.0/27".parse().unwrap());
 
     let mut lookup_value = "10.0.0.1/32".parse::<Cidr<u32>>().unwrap();
     let mut result = trie.search(&lookup_value);
