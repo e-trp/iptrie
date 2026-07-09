@@ -203,35 +203,38 @@ impl<T: CidrTrait> CidrTrie<T> {
     ///
     /// trie.insert("10.0.0.0/8".parse().unwrap());
     /// trie.insert("192.168.0.0/16".parse().unwrap());
-    ///
-    /// let mut result = trie.search("10.0.0.1/32".parse().unwrap());
+    /// let mut lookup = "10.0.0.1/32".parse::<Cidr<u32>>().unwrap();
+    /// let mut result = trie.search(&lookup);
     /// assert!(result.is_none());
     ///
-    /// result = trie.search("192.168.0.0/16".parse().unwrap());
+    /// lookup = "192.168.0.0/16".parse().unwrap();
+    /// result = trie.search(&lookup);
     /// assert!(result.is_some());
     /// ```
-    pub fn insert(&mut self, cidr: T) {
-        let mut current_node = self.root.as_mut().unwrap();
+    pub fn insert(&mut self, cidr: T) -> Option<bool> {
+        let mut current_node = self.root.as_mut()?;
 
         for bit in cidr.bits() {
             if bit == 1 {
                 if current_node.right.is_none() {
                     current_node.right = Some(Box::new(CidrNode::<T>::default()));
                 }
-                current_node = current_node.right.as_mut().unwrap();
+                current_node = current_node.right.as_mut()?;
             } else {
                 if current_node.left.is_none() {
                     current_node.left = Some(Box::new(CidrNode::<T>::default()));
                 }
-                current_node = current_node.left.as_mut().unwrap();
+                current_node = current_node.left.as_mut()?;
             }
         }
 
         current_node.value = Some(cidr);
+
+        Some(true)
     }
 
     pub fn search(&self, cidr: &T) -> Option<&T> {
-        let mut current_node = self.root.as_ref().unwrap();
+        let mut current_node = self.root.as_ref()?;
         for bit in cidr.bits() {
             current_node = if bit == 1 {
                 current_node.right.as_ref()?
@@ -242,8 +245,8 @@ impl<T: CidrTrait> CidrTrie<T> {
         current_node.value.as_ref()
     }
 
-    pub fn search_supernets(&self, cidr: &T) -> Vec<&T> {
-        let mut current_node = self.root.as_ref().unwrap();
+    pub fn search_supernets(&self, cidr: &T) -> Option<Vec<&T>> {
+        let mut current_node = self.root.as_ref()?;
         let len = cidr.prefix_len();
         let network = cidr.network();
         let mut result = Vec::<&T>::with_capacity(5);
@@ -268,7 +271,7 @@ impl<T: CidrTrait> CidrTrie<T> {
                 }
             }
         }
-        result
+        Some(result)
     }
 
     pub fn search_subnets(&self, cidr: &T) -> Vec<&T> {
