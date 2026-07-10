@@ -274,7 +274,33 @@ impl<T: CidrTrait> CidrTrie<T> {
         Some(result)
     }
 
-    pub fn search_subnets(&self, cidr: &T) -> Vec<&T> {
-        todo!("empty");
+    fn travers_values_from_node<'a>(&self, node: Option<&'a CidrNode<T>>, result: &mut Vec<&'a T>) {
+        if let Some(node) = node {
+            if let Some(value) = &node.value {
+                result.push(value);
+            }
+            if let Some(right) = node.right.as_ref() {
+                self.travers_values_from_node(Some(right), result);
+            }
+            if let Some(left) = node.left.as_ref() {
+                self.travers_values_from_node(Some(left), result);
+            }
+        }
+    }
+
+    pub fn search_subnets(&self, cidr: &T) -> Option<Vec<&T>> {
+        let mut result: Vec<&T> = Vec::with_capacity(5);
+        let mut current_node = self.root.as_ref()?;
+        let len = cidr.prefix_len();
+        let network = cidr.network();
+        for bit in cidr.bits() {
+            if bit == 1 {
+                current_node = current_node.right.as_ref()?;
+            } else {
+                current_node = current_node.left.as_ref()?;
+            }
+        }
+        self.travers_values_from_node(Some(current_node), &mut result);
+        Some(result)
     }
 }

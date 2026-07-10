@@ -28,4 +28,12 @@ fn main() {
 
     lookup_value = "10.10.10.0/24".parse().unwrap();
     println!("{:?}", trie.search_supernets(&lookup_value));
+
+    lookup_value = "10.0.0.0/8".parse().unwrap();
+    if let Some(subnets) = trie.search_subnets(&lookup_value) {
+        println!("for {lookup_value} found subnets: ");
+        for net in subnets.iter() {
+            println!("{net}");
+        }
+    }
 }
