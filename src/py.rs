@@ -34,4 +34,14 @@ impl PyTrie {
                 .collect::<Vec<String>>()
         })
     }
+
+    fn search_subnets(&self, cidr: &str) -> Option<Vec<String>> {
+        let parsed: Cidr<u32> = cidr.parse().ok()?;
+        self.inner.search_subnets(&parsed).map(|result| {
+            result
+                .into_iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+        })
+    }
 }
