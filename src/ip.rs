@@ -11,21 +11,25 @@ pub trait IpUsignedInt:
     + std::ops::BitOr<Output = Self>
     + std::ops::Not<Output = Self>
     + std::ops::Shl<u8, Output = Self>
+    + std::ops::Shr<u8, Output = Self>
 {
     const BITS: u8;
     const ZERO: Self;
+    const ONE: Self;
     const MAX: Self;
 }
 
 impl IpUsignedInt for u32 {
     const BITS: u8 = 32;
     const ZERO: Self = 0;
+    const ONE: Self = 1;
     const MAX: Self = u32::MAX;
 }
 
 impl IpUsignedInt for u128 {
     const BITS: u8 = 128;
     const ZERO: Self = 0;
+    const ONE: Self = 1;
     const MAX: Self = u128::MAX;
 }
 
@@ -54,6 +58,8 @@ pub trait CidrTrait {
 
     fn address(&self) -> Self::AddrType;
 
+    fn bits(&self) -> impl Iterator<Item = u8> + '_;
+
     #[inline(always)]
     fn mask(&self) -> Self::AddrType {
         Self::AddrType::MAX << (Self::AddrType::BITS - self.prefix_len())
@@ -67,14 +73,17 @@ pub trait CidrTrait {
         self.network() | (!self.mask())
     }
 
+    #[inline(always)]
+    fn is_set(&self, bit: u8) -> bool {
+        ((self.network() >> (bit - 1)) & Self::AddrType::ONE) == Self::AddrType::ONE
+    }
+
     fn iter(&self) -> CidrIter<Self::AddrType> {
         CidrIter {
             start: self.network(),
             end: self.broadcast(),
         }
     }
-
-    fn bits(&self) -> impl Iterator<Item = u8> + '_;
 }
 
 impl std::fmt::Display for Cidr<u32> {
@@ -302,5 +311,74 @@ impl<T: CidrTrait> CidrTrie<T> {
         }
         self.travers_values_from_node(Some(current_node), &mut result);
         Some(result)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CidrPatriciaNode<T: CidrTrait> {
+    value: Option<T>,
+    skip: u8,
+    left: Option<Box<CidrPatriciaNode<T>>>,
+    right: Option<Box<CidrPatriciaNode<T>>>,
+}
+
+impl<T: CidrTrait> Default for CidrPatriciaNode<T> {
+    fn default() -> Self {
+        Self {
+            value: None,
+            skip: 0u8,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+impl<T: CidrTrait> From<T> for CidrPatriciaNode<T> {
+    fn from(value: T) -> Self {
+        Self {
+            value: Some(value),
+            skip: 0u8,
+            left: None,
+            right: None,
+        }
+    }
+}
+
+pub struct PatriciaCidrTrie<T: CidrTrait> {
+    pub root: Option<CidrPatriciaNode<T>>,
+}
+
+impl<T: CidrTrait> Default for PatriciaCidrTrie<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: CidrTrait> PatriciaCidrTrie<T> {
+    pub fn new() -> Self {
+        Self {
+            root: Some(CidrPatriciaNode::<T>::default()),
+        }
+    }
+}
+
+impl<T: CidrTrait> PatriciaCidrTrie<T> {
+    pub fn insert(&mut self, cidr: T) -> Option<bool> {
+        let mut current_node = self.root.as_mut()?;
+        let prefix_len = cidr.prefix_len();
+        let network = cidr.network();
+
+        if current_node.skip == 0u8 {
+            current_node.skip = prefix_len - 1;
+            if cidr.is_set(1) {
+                current_node.right = Some(Box::new(CidrPatriciaNode::<T>::from(cidr)));
+            } else {
+                current_node.left = Some(Box::new(CidrPatriciaNode::<T>::from(cidr)));
+            }
+        } else {
+            todo!()
+        }
+
+        Some(false)
     }
 }
