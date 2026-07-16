@@ -78,6 +78,13 @@ pub trait CidrTrait {
         ((self.network() >> (bit - 1)) & Self::AddrType::ONE) == Self::AddrType::ONE
     }
 
+    fn common_bit_len(&self, other: &Self) -> u8 {
+        self.bits()
+            .zip(other.bits())
+            .take_while(|(l, r)| *l == *r)
+            .count() as u8
+    }
+
     fn iter(&self) -> CidrIter<Self::AddrType> {
         CidrIter {
             start: self.network(),
