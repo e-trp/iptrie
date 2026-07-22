@@ -58,7 +58,15 @@ pub trait CidrTrait {
 
     fn address(&self) -> Self::AddrType;
 
-    fn bits(&self) -> impl Iterator<Item = u8> + '_;
+    #[inline(always)]
+    fn bits(&self) -> impl Iterator<Item = u8> + '_ {
+        let addr = self.network();
+        let bits = Self::AddrType::BITS;
+        let len = self.prefix_len();
+        (0..len).map(move |i| {
+            (((addr >> (bits - i - 1)) & Self::AddrType::ONE) == Self::AddrType::ONE) as u8
+        })
+    }
 
     #[inline(always)]
     fn mask(&self) -> Self::AddrType {
@@ -146,12 +154,6 @@ impl CidrTrait for Cidr<u32> {
     #[inline(always)]
     fn address(&self) -> Self::AddrType {
         self.address
-    }
-
-    fn bits(&self) -> impl Iterator<Item = u8> + '_ {
-        let addr = self.network();
-        let len = self.prefix_len();
-        (0..len).map(move |i| ((addr >> (31 - i)) & 1) as u8)
     }
 }
 
@@ -290,16 +292,16 @@ impl<T: CidrTrait> CidrTrie<T> {
         Some(result)
     }
 
-    fn travers_values_from_node<'a>(&self, node: Option<&'a CidrNode<T>>, result: &mut Vec<&'a T>) {
+    fn travers_values_from_node<'a>(node: Option<&'a CidrNode<T>>, result: &mut Vec<&'a T>) {
         if let Some(node) = node {
             if let Some(value) = &node.value {
                 result.push(value);
             }
             if let Some(right) = node.right.as_ref() {
-                self.travers_values_from_node(Some(right), result);
+                Self::travers_values_from_node(Some(right), result);
             }
             if let Some(left) = node.left.as_ref() {
-                self.travers_values_from_node(Some(left), result);
+                Self::travers_values_from_node(Some(left), result);
             }
         }
     }
@@ -316,7 +318,7 @@ impl<T: CidrTrait> CidrTrie<T> {
                 current_node = current_node.left.as_ref()?;
             }
         }
-        self.travers_values_from_node(Some(current_node), &mut result);
+        Self::travers_values_from_node(Some(current_node), &mut result);
         Some(result)
     }
 }
