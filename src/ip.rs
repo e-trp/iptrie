@@ -104,7 +104,7 @@ pub trait CidrTrait {
 impl std::fmt::Display for Cidr<u32> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let [o1, o2, o3, o4] = self.address().to_be_bytes();
-        write!(f, "{o1}.{o2}.{o3}.{o4}/{0}", self.prefix_len())
+        Ok(write!(f, "{o1}.{o2}.{o3}.{o4}/{}", self.prefix_len())?)
     }
 }
 
