@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+use std::todo;
+
 const PARSE_ERROR: &str = "parse string error";
 
 pub trait IpUsignedInt:
@@ -278,15 +280,13 @@ impl<T: CidrTrait> CidrTrie<T> {
                 } else {
                     break;
                 }
-            } else {
-                if let Some(node) = current_node.left.as_ref() {
-                    if let Some(cidr) = node.value.as_ref() {
-                        result.push(cidr);
-                    }
-                    current_node = node;
-                } else {
-                    break;
+            } else if let Some(node) = current_node.left.as_ref() {
+                if let Some(cidr) = node.value.as_ref() {
+                    result.push(cidr);
                 }
+                current_node = node;
+            } else {
+                break;
             }
         }
         Some(result)
@@ -372,6 +372,47 @@ impl<T: CidrTrait> PatriciaCidrTrie<T> {
 }
 
 impl<T: CidrTrait> PatriciaCidrTrie<T> {
+    fn add_node<'a>(node: &CidrPatriciaNode<T>, cidr: &T, bit: u8) -> &'a CidrPatriciaNode<T> {
+        // add some node depends of bit value by splitting nodes
+        todo!()
+    }
+
+    fn split_node<'a>(
+        node: &CidrPatriciaNode<T>,
+        cidr: &T,
+        bit: u8,
+        new_skip: u8,
+    ) -> &'a CidrPatriciaNode<T> {
+        // add some nodes by split and change current skip value
+        todo!()
+    }
+
+    fn search_node<'a>(
+        node: &CidrPatriciaNode<T>,
+        cidr: &T,
+        prefix_len: u8,
+        bits: &[u8],
+    ) -> Option<&'a CidrPatriciaNode<T>> {
+        if prefix_len > node.skip {
+            let bit = bits[(node.skip + 1) as usize];
+            let interested_node = (if bit == 1 {
+                node.right.as_ref()?
+            } else {
+                node.left.as_ref()?
+            });
+            if let Some(value) = interested_node.value.as_ref() {
+                let bits_count = cidr.common_bit_len(value);
+                if bits_count == node.skip {
+                    return Some(Self::add_node(interested_node, cidr, bit));
+                } else if bits_count < node.skip {
+                    let new_skip = node.skip - bits_count;
+                    return Some(Self::split_node(node, cidr, bit, new_skip));
+                }
+            }
+        } 
+        todo!()
+    }
+
     pub fn insert(&mut self, cidr: T) -> Option<bool> {
         let mut current_node = self.root.as_mut()?;
         let prefix_len = cidr.prefix_len();
